@@ -1,0 +1,32 @@
+{
+    "ProjectXyz": {
+        "description": "A fitness tracking mobile app.",
+        "author": "John Doe",
+        "maintainer": ["Jane Smith", "Robert White"],
+        "email": ["jane.smith@example.com", "robert.white@example.com"]
+    },
+    "ProjectAbc": {
+        "description": "An e-commerce platform for handmade crafts.",
+        "author": "Emily Johnson",
+        "maintainer": "Chris Brown",
+        "email": "chris.brown@example.com"
+    },
+    "Project123": {
+        "description": "A machine learning model for weather prediction.",
+        "author": "Michael Lee",
+        "maintainer": "Sarah Connor",
+        "email": "sarah.connor@example.com"
+    },
+    "ProjectLMN": {
+        "description": "A cybersecurity tool for detecting phishing attacks.",
+        "author": "Alice Wong",
+        "maintainer": "Bob Taylor",
+        "email": "bob.taylor@example.com"
+    },
+    "ProjectPQR": {
+        "description": "A virtual reality game for learning languages.",
+        "author": "David Kim",
+        "maintainer": "Ella Davis",
+        "email": "ella.davis@example.com"
+    }
+}

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>llm test</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked@3.0.8/marked.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            text-align: center;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            font-size: 16px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007BFF;
+            color: white;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #response {
+            padding: 10px;
+            background-color: white;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            margin-top: 10px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .error {
+            color: red;
+        }
+        .spinner {
+            display: none;
+            margin: 20px auto;
+            border: 4px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 4px solid #007BFF;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+    <script>
+        async function sendMessage() {
+            const message = document.getElementById("message").value;
+            const responseElement = document.getElementById("response");
+            const spinner = document.querySelector(".spinner");
+
+            // Clear previous response and show spinner
+            responseElement.textContent = '';
+            spinner.style.display = 'block';
+
+            try {
+                // Sending request to server
+                const response = await fetch("/chat", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ message })
+                });
+
+                if (!response.ok) {
+                    console.error("Error: Response not OK", response.statusText);
+                    responseElement.textContent = 'Error: Unable to process the request';
+                    responseElement.classList.add("error");
+                    spinner.style.display = 'none';
+                    return;
+                }
+
+                // Process streaming response
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let done = false;
+                let text = '';
+
+                while (!done) {
+                    const { value, done: doneReading } = await reader.read();
+                    done = doneReading;
+                    text += decoder.decode(value, { stream: true });
+
+                    // Process the chunks as plain text
+                    try {
+                        const chunks = text.split('\n');
+                        for (const chunk of chunks) {
+                            if (chunk.trim() === 'null') {
+                                chunk = '\n';  // Convert 'null' to a new line
+                            }
+
+                            if (chunk.trim()) {  // Only process non-empty chunks
+                                console.log("Received plain text:", chunk);
+                                responseElement.textContent += chunk;
+                            }
+                        }
+
+                        // Keep only the remaining part of the response for the next iteration
+                        text = chunks[chunks.length - 1];
+                    } catch (error) {
+                        console.error("Error processing chunk:", error);
+                    }
+
+                }
+
+                // Hide the spinner once the response is complete
+                spinner.style.display = 'none';
+            } catch (error) {
+                console.error("Error:", error);
+                responseElement.textContent = 'Error: Unable to send the message';
+                responseElement.classList.add("error");
+                spinner.style.display = 'none';
+            }
+        }
+
+        // Attach the event listener to the button
+        document.addEventListener("DOMContentLoaded", function() {
+            const button = document.querySelector("button");
+            button.addEventListener("click", sendMessage);
+        });
+    </script>
+</head>
+<body>
+    <h1>LLM Test</h1>
+    <textarea id="message" placeholder="Ask about a project..."></textarea><br>
+    <button>Send</button>
+    <div class="spinner"></div>
+    <div id="response" style="white-space: pre-wrap;"></div>
+</body>
+</html>

@@ -1,0 +1,10 @@
+flask
+ollama
+requests
+python-dotenv
+markdown
+rapidfuzz
+transformers
+tensorflow
+tf-keras
+torch
