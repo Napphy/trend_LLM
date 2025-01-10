@@ -2,8 +2,14 @@
     "ProjectXyz": {
         "description": "A fitness tracking mobile app.",
         "author": "John Doe",
-        "maintainer": ["Jane Smith", "Robert White"],
-        "email": ["jane.smith@example.com", "robert.white@example.com"]
+        "maintainer": [
+            "Jane Smith",
+            "Robert White"
+        ],
+        "email": [
+            "jane.smith@example.com",
+            "robert.white@example.com"
+        ]
     },
     "ProjectAbc": {
         "description": "An e-commerce platform for handmade crafts.",

@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, jsonify, Response
 import requests
-from kb_logic import get_project_contact
+from kb_logic import get_project_contact, add_project_to_kb
 import json
 
 app = Flask(__name__)
@@ -54,6 +54,16 @@ def chat():
     )
 
     return generate_response(prompt)
+
+@app.route("/add_project", methods=["POST"])
+def add_project():
+    project_data = request.json  # Expecting JSON input for the new project
+    if not project_data:
+        return jsonify({"error": "No project data provided"}), 400
+
+    result = add_project_to_kb(project_data)
+    return jsonify({"message": result})
+
 
 def extract_project_name(user_query):
     return user_query.split(" ")[-1]  # Assume the project name is the last word

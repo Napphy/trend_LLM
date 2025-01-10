@@ -3,148 +3,247 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>llm test</title>
-    <script src="https://cdn.jsdelivr.net/npm/marked@3.0.8/marked.min.js"></script>
+    <title>LLM Prototype</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        #chatContainer {
+            width: 60%;
+            background: white;
             padding: 20px;
-            background-color: #f4f4f4;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            margin-top: 20px;
         }
-        h1 {
-            text-align: center;
-        }
-        textarea {
-            width: 100%;
-            height: 100px;
+
+        #messages {
+            border: 1px solid #ddd;
             padding: 10px;
-            font-size: 16px;
-            margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+            height: 300px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            border-radius: 5px;
         }
-        button {
-            width: 100%;
+
+        #inputContainer {
+            display: flex;
+            gap: 10px;
+        }
+
+        #userMessage {
+            flex: 1;
             padding: 10px;
-            background-color: #007BFF;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        #sendMessage {
+            padding: 10px 20px;
+            background-color: #007bff;
             color: white;
-            font-size: 16px;
             border: none;
-            border-radius: 4px;
+            border-radius: 5px;
             cursor: pointer;
         }
-        button:hover {
+
+        #sendMessage:hover {
             background-color: #0056b3;
         }
-        #response {
-            padding: 10px;
-            background-color: white;
-            border-radius: 4px;
-            border: 1px solid #ccc;
-            margin-top: 10px;
-            max-height: 400px;
-            overflow-y: auto;
+
+        #addProjectBtn {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 20px;
         }
-        .error {
-            color: red;
+
+        #addProjectBtn:hover {
+            background-color: #218838;
         }
-        .spinner {
+
+        #addProjectModal {
             display: none;
-            margin: 20px auto;
-            border: 4px solid #f3f3f3;
-            border-radius: 50%;
-            border-top: 4px solid #007BFF;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            border: 1px solid #ccc;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            z-index: 1000;
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+
+        #addProjectModal h2 {
+            margin-top: 0;
+        }
+
+        #addProjectModal input,
+        #addProjectModal textarea {
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        #addProjectModal button {
+            padding: 10px 20px;
+            margin-right: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #saveProject {
+            background-color: #007bff;
+            color: white;
+        }
+
+        #saveProject:hover {
+            background-color: #0056b3;
+        }
+
+        #closeModal {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        #closeModal:hover {
+            background-color: #c82333;
         }
     </style>
-    <script>
-        async function sendMessage() {
-            const message = document.getElementById("message").value;
-            const responseElement = document.getElementById("response");
-            const spinner = document.querySelector(".spinner");
-
-            // Clear previous response and show spinner
-            responseElement.textContent = '';
-            spinner.style.display = 'block';
-
-            try {
-                // Sending request to server
-                const response = await fetch("/chat", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ message })
-                });
-
-                if (!response.ok) {
-                    console.error("Error: Response not OK", response.statusText);
-                    responseElement.textContent = 'Error: Unable to process the request';
-                    responseElement.classList.add("error");
-                    spinner.style.display = 'none';
-                    return;
-                }
-
-                // Process streaming response
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder();
-                let done = false;
-                let text = '';
-
-                while (!done) {
-                    const { value, done: doneReading } = await reader.read();
-                    done = doneReading;
-                    text += decoder.decode(value, { stream: true });
-
-                    // Process the chunks as plain text
-                    try {
-                        const chunks = text.split('\n');
-                        for (const chunk of chunks) {
-                            if (chunk.trim() === 'null') {
-                                chunk = '\n';  // Convert 'null' to a new line
-                            }
-
-                            if (chunk.trim()) {  // Only process non-empty chunks
-                                console.log("Received plain text:", chunk);
-                                responseElement.textContent += chunk;
-                            }
-                        }
-
-                        // Keep only the remaining part of the response for the next iteration
-                        text = chunks[chunks.length - 1];
-                    } catch (error) {
-                        console.error("Error processing chunk:", error);
-                    }
-
-                }
-
-                // Hide the spinner once the response is complete
-                spinner.style.display = 'none';
-            } catch (error) {
-                console.error("Error:", error);
-                responseElement.textContent = 'Error: Unable to send the message';
-                responseElement.classList.add("error");
-                spinner.style.display = 'none';
-            }
-        }
-
-        // Attach the event listener to the button
-        document.addEventListener("DOMContentLoaded", function() {
-            const button = document.querySelector("button");
-            button.addEventListener("click", sendMessage);
-        });
-    </script>
 </head>
 <body>
-    <h1>LLM Test</h1>
-    <textarea id="message" placeholder="Ask about a project..."></textarea><br>
-    <button>Send</button>
-    <div class="spinner"></div>
-    <div id="response" style="white-space: pre-wrap;"></div>
+    <button id="addProjectBtn">Add New Project</button>
+
+    <div id="addProjectModal">
+        <h2>Add New Project</h2>
+        <label for="projectName">Project Name:</label>
+        <input type="text" id="projectName" required>
+        <label for="description">Description:</label>
+        <textarea id="description" rows="4" required></textarea>
+        <label for="author">Author:</label>
+        <input type="text" id="author" required>
+        <label for="maintainer">Maintainer:</label>
+        <input type="text" id="maintainer" required>
+        <label for="email">Email:</label>
+        <input type="email" id="email" required>
+        <button id="saveProject">Save Project</button>
+        <button id="closeModal">Close</button>
+    </div>
+
+    <div id="chatContainer">
+        <div id="messages"></div>
+        <div id="inputContainer">
+            <input type="text" id="userMessage" placeholder="Ask about a project...">
+            <button id="sendMessage">Send</button>
+        </div>
+    </div>
+
+    <script>
+        function resetFormFields() {
+            document.getElementById("projectName").value = "";
+            document.getElementById("description").value = "";
+            document.getElementById("author").value = "";
+            document.getElementById("maintainer").value = "";
+            document.getElementById("email").value = "";
+        }
+
+        document.getElementById("addProjectBtn").addEventListener("click", () => {
+            document.getElementById("addProjectModal").style.display = "block";
+        });
+
+        document.getElementById("closeModal").addEventListener("click", () => {
+            document.getElementById("addProjectModal").style.display = "none";
+            resetFormFields();
+        });
+
+        document.getElementById("saveProject").addEventListener("click", async () => {
+            const projectName = document.getElementById("projectName").value;
+            const description = document.getElementById("description").value;
+            const author = document.getElementById("author").value;
+            const maintainer = document.getElementById("maintainer").value;
+            const email = document.getElementById("email").value;
+
+            const projectData = {
+                projectName,
+                description,
+                author,
+                maintainer,
+                email,
+            };
+
+            try {
+                const response = await fetch("/add_project", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(projectData),
+                });
+
+                const result = await response.json();
+                alert(result.message);
+                document.getElementById("addProjectModal").style.display = "none";
+                resetFormFields();
+            } catch (error) {
+                console.error("Error adding project:", error);
+                alert("Failed to add project.");
+            }
+        });
+
+        document.getElementById("sendMessage").addEventListener("click", async () => {
+            const userMessage = document.getElementById("userMessage").value;
+            if (!userMessage) {
+                alert("Please enter a message.");
+                return;
+            }
+
+            const messageDiv = document.createElement("div");
+            messageDiv.textContent = `You: ${userMessage}`;
+            document.getElementById("messages").appendChild(messageDiv);
+
+            try {
+                const response = await fetch("/chat", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ message: userMessage }),
+                });
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder("utf-8");
+                let data = "";
+
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+                    data += decoder.decode(value);
+                }
+
+                const botResponse = document.createElement("div");
+                botResponse.textContent = `Bot: ${data}`;
+                document.getElementById("messages").appendChild(botResponse);
+            } catch (error) {
+                console.error("Error sending message:", error);
+            }
+        });
+    </script>
 </body>
 </html>
