@@ -14,5 +14,8 @@ transformers = "*"
 tensorflow = "*"
 tf-keras = "*"
 torch = "*"
+accelerate = "*"
+huggingface-hub = "*"
+gradio-client = "*"
 
 [dev-packages]
