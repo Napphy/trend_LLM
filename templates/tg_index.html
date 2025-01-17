@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIRGAT</title>
+</head>
+<body>
+    <h1>SIRGAT</h1>
+    <form id="query-form">
+        <label for="query">Enter your query:</label><br>
+        <input type="text" id="query" name="query"><br><br>
+        <button type="submit">Get Response</button>
+    </form>
+    <div id="response-section" style="margin-top: 20px;">
+        <h2>Assistant Response:</h2>
+        <p id="response"></p>
+    </div>
+    <script>
+        document.getElementById('query-form').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const query = document.getElementById('query').value;
+
+            const responseSection = document.getElementById('response-section');
+            const responseParagraph = document.getElementById('response');
+            responseParagraph.textContent = 'Loading...';
+
+            try {
+                const response = await fetch('/get_response', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({ query }),
+                });
+                const data = await response.json();
+
+                if (data.error) {
+                    responseParagraph.textContent = `Error: ${data.error}`;
+                } else {
+                    responseParagraph.textContent = data.response;
+                }
+            } catch (error) {
+                responseParagraph.textContent = `An error occurred: ${error.message}`;
+            }
+        });
+    </script>
+</body>
+</html>
